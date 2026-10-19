@@ -32,3 +32,31 @@ def dynamics(t, x, u_m, param):
 
     x_dot = np.concatenate((theta_dot, theta_dot_dot, i_dot))
     return x_dot
+
+
+def dynamics_decoupled(t, xx, u_m, param):
+    x, vx, i_x, y, vy, i_y = np.asarray(xx)
+    u_l, u_r = np.asarray(u_m(t))
+    r = param["r_m"]
+
+    u_x = u_l + u_r
+    u_y = u_l - u_r
+
+    motor_mass = 2 * param["J_m"] / r**2
+    mass_x = param["m_head"] + motor_mass
+    mass_y = param["m_head"] + param["m_rails"] + motor_mass
+
+    damping_x = 2 * param["mu_lx"] + 8 * param["mu_r"]
+    damping_y = 2 * param["mu_ly"] + 4 * param["mu_r"]
+
+    ax = (param["K_m"] * i_x / r - damping_x * vx) / mass_x
+    ay = (param["K_m"] * i_y / r - damping_y * vy) / mass_y
+
+    di_x = (
+        u_x - param["R_m"] * i_x - 2 * param["K_e"] * vx / r
+    ) / param["L_m"]
+    di_y = (
+        u_y - param["R_m"] * i_y - 2 * param["K_e"] * vy / r
+    ) / param["L_m"]
+
+    return np.array([vx, ax, di_x, vy, ay, di_y])
