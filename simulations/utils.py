@@ -58,7 +58,7 @@ def plot_solution(solution, labels, ylabel, axes=None, show=True):
     axes[2].plot(solution.t, solution.y[2], label=labels[0])
     axes[2].plot(solution.t, solution.y[5], "--", label=labels[1])
     axes[2].set_ylabel(ylabel[2])
-    axes[2].set_xlabel("Time")
+    axes[2].set_xlabel("Time [s]")
 
     for ax in axes:
         ax.grid(True)
