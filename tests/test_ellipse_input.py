@@ -6,7 +6,7 @@ from scipy.integrate import solve_ivp
 from printer_model.dynamics import dynamics, dynamics_decoupled
 from printer_model.parameters import param
 from simulations.q1_4_draw_shapes import (
-    a, b, center, duration, ellipse_initial_state, ellipse_motion, ellipse_voltage,
+    a, b, center, duration, initial_state_from_motion, ellipse_motion, ellipse_voltage,
 )
 
 
@@ -21,7 +21,7 @@ class EllipseInputTests(unittest.TestCase):
             2 * param["mu_ly"] + 4 * param["mu_r"]
         ) * b * phase_rate
         np.testing.assert_allclose(
-            ellipse_initial_state(),
+            initial_state_from_motion(ellipse_motion),
             [center[0] - a, 0, current_x, center[1], -b * phase_rate, current_y],
             atol=1e-13,
         )
@@ -41,7 +41,7 @@ class EllipseInputTests(unittest.TestCase):
                 np.testing.assert_allclose(actual[order], numerical, rtol=1e-7, atol=1e-7)
 
     def test_both_models_follow_two_revolutions_and_return_to_initial_state(self):
-        initial_state = ellipse_initial_state()
+        initial_state = initial_state_from_motion(ellipse_motion)
         r = param["r_m"]
         transform = np.array([
             [r / 2, r / 2, 0, 0, 0, 0],

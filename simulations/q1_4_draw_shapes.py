@@ -78,6 +78,16 @@ def initial_state_from_motion(motion):
 
 
 def rose_motion(t, petals=rose_petals, radius=rose_radius, traversal_time=rose_duration):
+    """Rose with an odd number of petals or a petal count divisible by four."""
+    if (isinstance(petals, (bool, np.bool_))
+            or not isinstance(petals, (int, np.integer)) or petals <= 0):
+        raise ValueError("Petals must be a positive integer.")
+    if petals % 2 == 0 and petals % 4 != 0:
+        raise ValueError("This rose formula supports odd petal counts or multiples of four.")
+    if not np.isfinite(radius) or radius <= 0:
+        raise ValueError("Radius must be positive and finite.")
+    if not np.isfinite(traversal_time) or traversal_time <= 0:
+        raise ValueError("Traversal time must be positive and finite.")
     k = petals if petals % 2 else petals / 2
     phase_span = np.pi if petals % 2 else 2 * np.pi
     phase_rate = phase_span / traversal_time

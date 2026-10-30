@@ -6,7 +6,7 @@ from scipy.integrate import solve_ivp
 from printer_model.dynamics import dynamics, dynamics_decoupled
 from printer_model.parameters import param
 from simulations.q1_4_draw_shapes import (
-    center, rose_duration, rose_initial_state, rose_motion, rose_radius, rose_voltage,
+    center, rose_duration, initial_state_from_motion, rose_motion, rose_radius, rose_voltage,
 )
 
 
@@ -37,7 +37,7 @@ class RoseInputTests(unittest.TestCase):
                     2 * param["mu_ly"] + 4 * param["mu_r"]
                 ) * radius * phase_rate
                 np.testing.assert_allclose(
-                    rose_initial_state(petals, radius, duration),
+                    initial_state_from_motion(lambda t: rose_motion(t, petals, radius, duration)),
                     [center[0] - radius, 0, current_x, center[1], -radius * phase_rate, current_y],
                     atol=1e-12,
                 )
@@ -75,7 +75,8 @@ class RoseInputTests(unittest.TestCase):
             [0, 0, 0, 0, 1, -1],
         ])
         for petals in (5, 8):
-            initial_state = rose_initial_state(petals=petals, traversal_time=duration)
+            initial_state = initial_state_from_motion(
+                lambda t: rose_motion(t, petals=petals, traversal_time=duration))
             expected = np.array([
                 rose_motion(t, petals, traversal_time=duration)[0] for t in times
             ]).T

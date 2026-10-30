@@ -1,48 +1,41 @@
-import matplotlib.pyplot as plt
+import unittest
+
 import numpy as np
-from scipy.integrate import solve_ivp
 
 from printer_model.dynamics import dynamics
 from printer_model.parameters import param
 
 
-def voltage_signal(t):
-    return 1.0, 1.0
+class DynamicsTests(unittest.TestCase):
+    def test_rest_is_an_equilibrium_without_voltage(self):
+        state = np.array([1.0, -2.0, 0.0, 0.0, 0.0, 0.0])
+        np.testing.assert_array_equal(dynamics(0, state, lambda t: (0, 0), param), 0)
+
+    def test_electrical_input_power_equals_stored_power_and_losses(self):
+        rng = np.random.default_rng(42)
+        r = param["r_m"]
+        for _ in range(30):
+            state = rng.normal(size=6)
+            voltage = rng.normal(size=2)
+            derivative = dynamics(0, state, lambda t: voltage, param)
+            omega, current = state[2:4], state[4:6]
+            acceleration = derivative[2:4]
+            vx, vy = r / 2 * np.array([omega.sum(), omega[0] - omega[1]])
+            ax, ay = r / 2 * np.array([
+                acceleration.sum(), acceleration[0] - acceleration[1]])
+            stored_power = (
+                param["J_m"] * omega @ acceleration
+                + param["m_head"] * vx * ax
+                + (param["m_head"] + param["m_rails"]) * vy * ay
+                + param["L_m"] * current @ derivative[4:6]
+            )
+            loss = (
+                param["R_m"] * current @ current
+                + (2 * param["mu_lx"] + 8 * param["mu_r"]) * vx**2
+                + (2 * param["mu_ly"] + 4 * param["mu_r"]) * vy**2
+            )
+            self.assertAlmostEqual(stored_power + loss, voltage @ current, places=11)
 
 
-initial_state = np.zeros(6)
-
-solution = solve_ivp(
-    dynamics,
-    t_span=(0.0, 1.0),
-    y0=initial_state,
-    args=(voltage_signal, param),
-    method="Radau",
-    rtol=1e-6,
-    atol=1e-9,
-)
-
-if not solution.success:
-    raise RuntimeError(solution.message)
-
-fig, axes = plt.subplots(3, 1, sharex=True, figsize=(8, 8))
-
-axes[0].plot(solution.t, solution.y[0], label="Left motor")
-axes[0].plot(solution.t, solution.y[1], "--", label="Right motor")
-axes[0].set_ylabel("Angle")
-
-axes[1].plot(solution.t, solution.y[2], label="Left motor")
-axes[1].plot(solution.t, solution.y[3], "--", label="Right motor")
-axes[1].set_ylabel("Angular velocity")
-
-axes[2].plot(solution.t, solution.y[4], label="Left motor")
-axes[2].plot(solution.t, solution.y[5], "--", label="Right motor")
-axes[2].set_ylabel("Current")
-axes[2].set_xlabel("Time")
-
-for ax in axes:
-    ax.grid(True)
-    ax.legend()
-
-fig.tight_layout()
-plt.show()
+if __name__ == "__main__":
+    unittest.main()

@@ -79,6 +79,8 @@ an ellipse, an eight-petal rose and an optional TU Delft flame. The three
 figures are saved in `results/` using the filenames listed below. The script uses the
 decoupled motor model and inverse-dynamics voltages. Shape dimensions and
 durations are set near the top of `simulations/q1_4_draw_shapes.py`.
+The rose function accepts positive odd petal counts and multiples of four.
+Other even counts cannot be produced by this formula and are rejected.
 Shared simulation and plotting functions are in `simulations/utils.py`.
 
 ### Q1.6: cooling of deposited filament
@@ -324,10 +326,9 @@ python3 -m unittest discover -s tests -p test_hybrid_printer.py -v
 python3 -m unittest discover -s tests -p test_square.py -v
 ```
 
-### Existing Q1.4 test issues
+### Q1.4: trajectories and motor dynamics
 
-The ellipse, rose and flame test modules currently import initial-state
-helpers that are not defined in `simulations/q1_4_draw_shapes.py`:
-`ellipse_initial_state`, `rose_initial_state` and `flame_initial_state`.
-Full test discovery therefore reports three import errors. The simulation
-script uses `initial_state_from_motion` to calculate its initial states.
+The checks use `initial_state_from_motion` to initialise each trajectory.
+They verify trajectory derivatives, petal counts, closure and tracking with
+both motor models. The dynamics tests also check power balance and agreement
+between the coupled and decoupled models, without opening figures.
