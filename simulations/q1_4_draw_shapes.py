@@ -1,6 +1,9 @@
-import numpy as np
+from pathlib import Path
+
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.interpolate import BSpline
+
 from printer_model.dynamics import dynamics_decoupled
 from printer_model.parameters import param
 from simulations.utils import (
@@ -9,7 +12,7 @@ from simulations.utils import (
 
 duration = 0.5
 a = 0.1
-b = 0.06 
+b = 0.06
 center = np.array([0.15, 0.15])
 
 rose_petals = 8
@@ -119,11 +122,13 @@ def make_flame_path():
 
 def flame_motion(t):
     flame_path = make_flame_path()
-    s = t / flame_duration
-    progress = 10 * s**3 - 15 * s**4 + 6 * s**5
-    progress_dot = (30 * s**2 - 60 * s**3 + 30 * s**4) / flame_duration
-    progress_ddot = (60 * s - 180 * s**2 + 120 * s**3) / flame_duration**2
-    progress_dddot = (60 - 360 * s + 360 * s**2) / flame_duration**3
+    normalized_time = t / flame_duration
+    progress = 10 * normalized_time**3 - 15 * normalized_time**4 + 6 * normalized_time**5
+    progress_dot = (30 * normalized_time**2 - 60 * normalized_time **
+                    3 + 30 * normalized_time**4) / flame_duration
+    progress_ddot = (60 * normalized_time - 180 * normalized_time **
+                     2 + 120 * normalized_time**3) / flame_duration**2
+    progress_dddot = (60 - 360 * normalized_time + 360 * normalized_time**2) / flame_duration**3
 
     position = flame_path(progress)
     dposition = flame_path(progress, nu=1)
@@ -148,14 +153,17 @@ def flame_voltage(t):
 
 
 if __name__ == "__main__":
+    output_dir = Path(__file__).resolve().parents[1] / "results"
+    output_dir.mkdir(parents=True, exist_ok=True)
     initial_state = initial_state_from_motion(ellipse_motion)
     flame_start = flame_motion(0.0)[0]
     flame_initial_state = np.array([flame_start[0], 0.0, 0.0, flame_start[1], 0.0, 0.0])
-    rose_start_state = initial_state_from_motion(lambda t: rose_motion(t, rose_petals, rose_radius, rose_duration))
-    for name, voltage_signal, start, traversal_time in (
-        ("Ellipse", ellipse_voltage, initial_state, duration),
-        ("Rose", rose_voltage, rose_start_state, rose_duration),
-        ("TU Delft flame", flame_voltage, flame_initial_state, flame_duration)
+    rose_start_state = initial_state_from_motion(
+        lambda t: rose_motion(t, rose_petals, rose_radius, rose_duration))
+    for name, filename, voltage_signal, start, traversal_time in (
+        ("Ellipse", "Figure_ellipse1.png", ellipse_voltage, initial_state, duration),
+        ("Rose", "Figure_flower1.png", rose_voltage, rose_start_state, rose_duration),
+        ("TU Delft flame", "Figure_flame1.png", flame_voltage, flame_initial_state, flame_duration)
     ):
         solution = simulate_dynamics(
             dynamics_decoupled, voltage_signal, start, param,
@@ -175,4 +183,6 @@ if __name__ == "__main__":
             ax=axes[1, 1], show=False,
         )
         fig.tight_layout()
+        fig.savefig(output_dir / filename, dpi=100)
+    print(f"Figures saved in {output_dir}")
     plt.show()

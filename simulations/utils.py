@@ -1,6 +1,6 @@
-import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+import matplotlib.pyplot as plt
+import numpy as np
 from scipy.integrate import solve_ivp
 
 
@@ -40,6 +40,7 @@ def simulate_dynamics(
     if not solution.success:
         raise RuntimeError(solution.message)
     return solution
+
 
 def plot_solution(solution, labels, ylabel, axes=None, show=True):
     if axes is None:

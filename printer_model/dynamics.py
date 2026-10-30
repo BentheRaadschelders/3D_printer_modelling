@@ -1,10 +1,10 @@
 import numpy as np
 
-def dynamics(t, x, u_m, param):
-    x = np.asarray(x)
-    x_dot = np.zeros_like(x)
-    theta_dot = x[2:4]
-    current = x[4:6]
+
+def dynamics(t, state, u_m, param):
+    state = np.asarray(state)
+    theta_dot = state[2:4]
+    current = state[4:6]
     u = np.asarray(u_m(t))
     r = param["r_m"]
 
@@ -30,12 +30,12 @@ def dynamics(t, x, u_m, param):
 
     i_dot = (u - param["R_m"] * current - param["K_e"] * theta_dot) / param["L_m"]
 
-    x_dot = np.concatenate((theta_dot, theta_dot_dot, i_dot))
-    return x_dot
+    state_dot = np.concatenate((theta_dot, theta_dot_dot, i_dot))
+    return state_dot
 
 
-def dynamics_decoupled(t, xx, u_m, param):
-    x, vx, i_x, y, vy, i_y = np.asarray(xx)
+def dynamics_decoupled(t, state, u_m, param):
+    x, vx, i_x, y, vy, i_y = np.asarray(state)
     u_l, u_r = np.asarray(u_m(t))
     r = param["r_m"]
 
